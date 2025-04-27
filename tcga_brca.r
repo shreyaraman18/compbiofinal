@@ -5,7 +5,7 @@ options(repos = c(CRAN = "https://cloud.r-project.org"))
 if (!require("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 
-# Using version 3.16 of BiocManager which is compatible with R 4.2
+# Using version 3.16 of BiocManager, compatible with R 4.2
 BiocManager::install(version = "3.16")
 
 if (!require("TCGAbiolinks", quietly = TRUE)) {
@@ -38,36 +38,3 @@ GDCdownload(
   files.per.chunk = 5,
   directory = "GDCdata"
 )
-
-# Prepare data
-brca_maf <- GDCprepare(query_snv)
-print("MAF data preparation complete")
-
-# Read as MAF object for analysis with maftools
-print(class(brca_maf))
-print(head(colnames(brca_maf)))
-
-if(!"Hugo_Symbol" %in% colnames(brca_maf)) {
-  print("Converting to standard MAF format...")
-}
-
-# Read the MAF data 
-maf_object <- read.maf(maf = brca_maf)
-print("MAF object created successfully")
-
-# Analyze co-occurrence and mutual exclusivity (performs pair-wise Fisher's Exact test) - top 25 genes
-print("Analyzing co-occurrence and mutual exclusivity...")
-cooc_me <- somaticInteractions(maf = maf_object, top = 25, pvalue = 0.05)
-
-print(cooc_me)
-
-# Export results to a CSV file
-results_df <- as.data.frame(cooc_me)
-write.csv(results_df, "BRCA_gene_interactions.csv", row.names = FALSE)
-print("Results saved to BRCA_gene_interactions.csv")
-
-# Visualize the results
-pdf("BRCA_gene_interactions.pdf", width = 10, height = 10)
-somaticInteractions(maf = maf_object, top = 25, pvalue = 0.05)
-dev.off()
-print("Results visualization saved to BRCA_gene_interactions.pdf")
